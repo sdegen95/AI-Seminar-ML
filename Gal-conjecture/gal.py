@@ -91,7 +91,7 @@ def f_vector(adj,cliques=False):
         return f_vec, d
     """
 
-
+@cached_method
 def h_vector(f_vec):
     h_vec = []
     d = len(f_vec)-1
