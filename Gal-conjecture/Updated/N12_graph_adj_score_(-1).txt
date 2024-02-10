@@ -13,3 +13,5 @@
 
 h-vec: [1, 8, 13, 8, 1]
 gam-vec: [1, 4, -1]
+
+DOESN'T work, to dimension to low
