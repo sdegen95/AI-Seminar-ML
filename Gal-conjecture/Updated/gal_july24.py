@@ -24,7 +24,7 @@ torch.set_num_threads(10)
 # internal imports
 # from combinatorics import reward
 
-GAMES_PER_EPOCH    = 500
+GAMES_PER_EPOCH    = 1000
 TOP_GAMES_FACTOR   = 0.1
 BATCH_SIZE         = 500
 NETWORK_SIZES      = [1000, 200, 10]
@@ -313,6 +313,7 @@ def RewardFunction(board, n_vertices, dim, punishment, correct_ec):
     # if nx.node_connectivity(G) == 2:
     #     return int(punish_value/5)
 
+    # The graph of a flag manifold must be 2d connected
     conn = nx.node_connectivity(G)
     if conn < 2 * dim:
         return ((2 * dim) - conn) * punishment
@@ -320,20 +321,32 @@ def RewardFunction(board, n_vertices, dim, punishment, correct_ec):
     #f_vec, cliques = f_vector(adj)
     f_vec = f_vector(adj)
 
-    if len(f_vec) > dim+2:
+    if len(f_vec) != dim+2:
         return  int(punishment/5)
 
     if euler_char(f_vec) != correct_ec:
         return int(punishment/5)
 
+    min_fvec = [2^i*math.comb(dim+1,i) for i in range(dim+2)]
+    diff_fvec = sum([max(min_fvec[i]-f_vec[i],0) for i in range(dim+2)])
+    if diff_fvec > 0:
+        return diff_fvec*punishment/100
+
     h_vec = h_vector(f_vec)
     
+    min_hvec = [math.comb(dim+1,i) for i in range(dim+2)]
+    diff_hvec = sum([max(min_hvec[i]-h_vec[i],0) for i in range(dim+2)])
+    if diff_hvec > 0:
+        return return diff_hvec*punishment/1000
+    
+    """
     d = len(h_vec)-1
     neg_components = abs(sum([h for h in h_vec if h < 0]))
 
     if neg_components > 0:
-        return neg_components*10000
-        
+        return neg_components*punishment/10000
+    """
+
     #if d+1 == dim+2:
     t = sum([abs(h_vec[d-i]-h_vec[i]) for i in range(d//2+1)])
     if t > 0:
@@ -345,6 +358,7 @@ def RewardFunction(board, n_vertices, dim, punishment, correct_ec):
 
     if gam_min < 0:
         return 0
+    return gam_min
         """
         if gam_min >= LOWER_BOUND: 
             considered_cliques = [x for x in cliques if len(x)==d-1 or len(x)==d-2]
