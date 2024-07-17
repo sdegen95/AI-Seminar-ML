@@ -237,7 +237,7 @@ class GalExample:
             scores.append(score)
         return scores
         """
-        return [ self.reward(game) for game in games ]
+        return [ int(self.reward(game)) for game in games ]
 
     
     def reward(self, adj):
@@ -327,6 +327,7 @@ def RewardFunction(board, n_vertices, dim, punishment, correct_ec):
     if euler_char(f_vec) != correct_ec:
         return int(punishment/5)
 
+    # minimal values based on paper "Some combintorial properties of flag simplicial pseudomanifolds and spheres"
     min_fvec = [2^i*math.comb(dim+1,i) for i in range(dim+2)]
     diff_fvec = sum([max(min_fvec[i]-f_vec[i],0) for i in range(dim+2)])
     if diff_fvec > 0:
@@ -337,7 +338,7 @@ def RewardFunction(board, n_vertices, dim, punishment, correct_ec):
     min_hvec = [math.comb(dim+1,i) for i in range(dim+2)]
     diff_hvec = sum([max(min_hvec[i]-h_vec[i],0) for i in range(dim+2)])
     if diff_hvec > 0:
-        return return diff_hvec*punishment/1000
+        return diff_hvec*punishment/1000
     
     """
     d = len(h_vec)-1
@@ -359,27 +360,28 @@ def RewardFunction(board, n_vertices, dim, punishment, correct_ec):
     if gam_min < 0:
         return 0
     return gam_min
-        """
-        if gam_min >= LOWER_BOUND: 
-            considered_cliques = [x for x in cliques if len(x)==d-1 or len(x)==d-2]
-            for face in considered_cliques:
-                l = link(cliques,face)
-                l_h_vec = h_vector_from_simplices(l)
-                    l_d = len(l_h_vec)-1
-                    l_t = sum([abs(l_h_vec[l_d-i]-l_h_vec[i]) for i in range(l_d//2+1)])
-                    if l_t > 0:
-                        gam_min += l_t*0.01
-                    elif l_t == 0:
-                        continue
-                return gam_min
-            else:
-                return abs(gam_min)
-        else:
-            return gam_min + 100
-        else:
-            return neg_components + 10000
 
-        """
+"""
+if gam_min >= LOWER_BOUND: 
+    considered_cliques = [x for x in cliques if len(x)==d-1 or len(x)==d-2]
+    for face in considered_cliques:
+        l = link(cliques,face)
+        l_h_vec = h_vector_from_simplices(l)
+            l_d = len(l_h_vec)-1
+            l_t = sum([abs(l_h_vec[l_d-i]-l_h_vec[i]) for i in range(l_d//2+1)])
+            if l_t > 0:
+                gam_min += l_t*0.01
+            elif l_t == 0:
+                continue
+        return gam_min
+    else:
+        return abs(gam_min)
+else:
+    return gam_min + 100
+else:
+    return neg_components + 10000
+
+"""
 
 # ## Helper functions
 
