@@ -13,7 +13,7 @@ import itertools
 
 from numpy.linalg import matrix_power
 from collections import Counter
-#from cached_method import cached_method
+from cached_method import cached_method
 import time
 
 #from methodtools import lru_cache
@@ -53,9 +53,8 @@ class GalExample:
                 ):
         # store input data
         self.n_vertices  = n_vertices
-        self.n_edges     = n_vertices*(n_vertices-1)//2
         self.output_size = 1
-        self.input_size  = self.n_edges
+        self.input_size  = n_vertices*(n_vertices-1)//2
         self.dim         = dim
         self.punishment  = punishment
         self.correct_ec  = correct_ec
@@ -237,9 +236,9 @@ class GalExample:
             scores.append(score)
         return scores
         """
-        return [ int(self.reward(game)) for game in games ]
+        return [ int(self.reward(tuple(game))) for game in games ]
 
-    
+    @cached_method
     def reward(self, adj):
         return RewardFunction(adj, self.n_vertices, self.dim, self.punishment, self.correct_ec)
 
@@ -300,7 +299,7 @@ class MatrixNeuralNetwork(nn.Module):
 def RewardFunction(board, n_vertices, dim, punishment, correct_ec):
     # Check if graph is connected
     #conn = Main.check_connected(adj)
-    adj = board_to_adj(n_vertices, board)
+    adj = board_to_adj(n_vertices, np.array(board))
 
     if np.sum(adj) < n_vertices: #or np.sum(adj) > 26:
         return punishment * n_vertices
@@ -328,17 +327,17 @@ def RewardFunction(board, n_vertices, dim, punishment, correct_ec):
         return int(punishment/5)
 
     # minimal values based on paper "Some combintorial properties of flag simplicial pseudomanifolds and spheres"
-    min_fvec = [2^i*math.comb(dim+1,i) for i in range(dim+2)]
+    min_fvec = [2**i*math.comb(dim+1,i) for i in range(dim+2)]
     diff_fvec = sum([max(min_fvec[i]-f_vec[i],0) for i in range(dim+2)])
     if diff_fvec > 0:
-        return diff_fvec*punishment/100
+        return int((diff_fvec*punishment)/10000)
 
     h_vec = h_vector(f_vec)
     
     min_hvec = [math.comb(dim+1,i) for i in range(dim+2)]
     diff_hvec = sum([max(min_hvec[i]-h_vec[i],0) for i in range(dim+2)])
     if diff_hvec > 0:
-        return diff_hvec*punishment/1000
+        return int((diff_hvec*punishment)/1000000)
     
     """
     d = len(h_vec)-1
